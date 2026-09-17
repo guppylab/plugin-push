@@ -155,6 +155,28 @@ describe('Android Native Code', function () {
     });
 });
 
+describe('JavaScript Library', function () {
+    it('ships a JS library with TypeScript definitions', function () {
+        expect(file_exists($this->pluginPath.'/resources/js/index.js'))->toBeTrue();
+        expect(file_exists($this->pluginPath.'/resources/js/index.d.ts'))->toBeTrue();
+    });
+
+    it('exports a function for every bridge function', function () {
+        $manifest = json_decode(file_get_contents($this->manifestPath), true);
+        $js = file_get_contents($this->pluginPath.'/resources/js/index.js');
+
+        foreach ($manifest['bridge_functions'] as $fn) {
+            expect($js)->toContain($fn['name']);
+        }
+
+        // Um export por bridge function, mais o subscriber do evento do token.
+        expect($js)->toContain('export async function requestPermission');
+        expect($js)->toContain('export async function checkPermission');
+        expect($js)->toContain('export async function getToken');
+        expect($js)->toContain('export function onToken');
+    });
+});
+
 describe('PHP Classes', function () {
     it('has the service provider under Guppylab\Push', function () {
         $file = $this->pluginPath.'/src/PushNotificationServiceProvider.php';

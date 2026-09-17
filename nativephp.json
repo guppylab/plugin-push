@@ -1,6 +1,6 @@
 {
     "name": "guppylab/plugin-push",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "description": "Push notifications via APNs direto (.p8) no iOS e Firebase Cloud Messaging no Android — handlers nativos para a facade PushNotifications do NativePHP Mobile",
     "namespace": "PushNotification",
     "keywords": ["push", "apns", "fcm", "notifications", "remote"],

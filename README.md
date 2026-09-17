@@ -59,6 +59,25 @@ public function onToken(string $token, ?string $id = null): void
 }
 ```
 
+## Usage (JavaScript / Inertia — Vue or React)
+
+```js
+import { requestPermission, checkPermission, getToken, onToken } from 'guppylab-plugin-push';
+
+const unsubscribe = onToken((token, id) => {
+    // iOS: raw APNs device token in hex. Android: FCM registration token.
+});
+
+if (await checkPermission() !== 'granted') {
+    await requestPermission();
+}
+
+// later: unsubscribe();
+```
+
+The JS library ships TypeScript definitions and works across Livewire v3/v4 and
+Inertia (Vue/React).
+
 ## iOS setup
 
 The plugin declares the `aps-environment` entitlement in its manifest, so it is
