@@ -26,7 +26,7 @@ describe('Plugin Manifest', function () {
         $manifest = json_decode(file_get_contents($this->manifestPath), true);
 
         expect($manifest)->toHaveKeys(['name', 'namespace', 'bridge_functions']);
-        expect($manifest['name'])->toBe('keepcloud/plugin-push');
+        expect($manifest['name'])->toBe('guppylab/plugin-push');
         expect($manifest['namespace'])->toBe('PushNotification');
     });
 
@@ -53,14 +53,14 @@ describe('Plugin Manifest', function () {
     it('maps every bridge function to an Android class under the vendor package', function () {
         $manifest = json_decode(file_get_contents($this->manifestPath), true);
         foreach ($manifest['bridge_functions'] as $fn) {
-            expect($fn['android'])->toStartWith('com.keepcloud.plugins.push.PushNotificationFunctions.');
+            expect($fn['android'])->toStartWith('com.guppylab.plugins.push.PushNotificationFunctions.');
         }
     });
 
     it('declares the FCM messaging service and POST_NOTIFICATIONS', function () {
         $manifest = json_decode(file_get_contents($this->manifestPath), true);
         expect($manifest['android']['permissions'])->toContain('android.permission.POST_NOTIFICATIONS');
-        expect($manifest['android']['services'][0]['name'])->toBe('com.keepcloud.plugins.push.PushMessagingService');
+        expect($manifest['android']['services'][0]['name'])->toBe('com.guppylab.plugins.push.PushMessagingService');
         expect($manifest['android']['dependencies']['implementation'])
             ->toContain('com.google.firebase:firebase-messaging:24.1.0');
 
@@ -123,7 +123,7 @@ describe('Android Native Code', function () {
         $manifest = json_decode(file_get_contents($this->manifestPath), true);
         $kotlin = file_get_contents($this->kotlinFile);
 
-        expect($kotlin)->toContain('package com.keepcloud.plugins.push');
+        expect($kotlin)->toContain('package com.guppylab.plugins.push');
         foreach ($manifest['bridge_functions'] as $fn) {
             $className = last(explode('.', $fn['android']));
             expect($kotlin)->toContain("class {$className}");
@@ -141,7 +141,7 @@ describe('Android Native Code', function () {
     it('has the FirebaseMessagingService', function () {
         $service = file_get_contents($this->serviceFile);
 
-        expect($service)->toContain('package com.keepcloud.plugins.push');
+        expect($service)->toContain('package com.guppylab.plugins.push');
         expect($service)->toContain('class PushMessagingService : FirebaseMessagingService()');
         expect($service)->toContain('onNewToken');
         expect($service)->toContain('onMessageReceived');
@@ -156,12 +156,12 @@ describe('Android Native Code', function () {
 });
 
 describe('PHP Classes', function () {
-    it('has the service provider under Keepcloud\Push', function () {
+    it('has the service provider under Guppylab\Push', function () {
         $file = $this->pluginPath.'/src/PushNotificationServiceProvider.php';
         expect(file_exists($file))->toBeTrue();
 
         $content = file_get_contents($file);
-        expect($content)->toContain('namespace Keepcloud\Push');
+        expect($content)->toContain('namespace Guppylab\Push');
         expect($content)->toContain('class PushNotificationServiceProvider');
     });
 });
@@ -175,9 +175,9 @@ describe('Composer Configuration', function () {
 
         expect(json_last_error())->toBe(JSON_ERROR_NONE);
         expect($composer['type'])->toBe('nativephp-plugin');
-        expect($composer['name'])->toBe('keepcloud/plugin-push');
+        expect($composer['name'])->toBe('guppylab/plugin-push');
         expect($composer['extra']['nativephp']['manifest'])->toBe('nativephp.json');
         expect($composer['extra']['laravel']['providers'])
-            ->toBe(['Keepcloud\Push\PushNotificationServiceProvider']);
+            ->toBe(['Guppylab\Push\PushNotificationServiceProvider']);
     });
 });

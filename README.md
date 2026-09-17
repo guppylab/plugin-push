@@ -16,15 +16,15 @@ on both platforms.
 ## Installation
 
 ```bash
-composer require keepcloud/plugin-push
-php artisan native:plugin:register keepcloud/plugin-push
+composer require guppylab/plugin-push
+php artisan native:plugin:register guppylab/plugin-push
 php artisan native:run   # rebuild the native project
 ```
 
 Register the service provider in the app's `NativeServiceProvider::plugins()`:
 
 ```php
-use Keepcloud\Push\PushNotificationServiceProvider;
+use Guppylab\Push\PushNotificationServiceProvider;
 
 public function plugins(): array
 {

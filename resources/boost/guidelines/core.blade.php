@@ -1,4 +1,4 @@
-## keepcloud/plugin-push
+## guppylab/plugin-push
 
 Native push handlers for NativePHP Mobile: APNs direct (`.p8`, no Firebase) on
 iOS, Firebase Cloud Messaging on Android. The facade, the JS bridge and the

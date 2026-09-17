@@ -1,6 +1,6 @@
 <?php
 
-namespace Keepcloud\Push;
+namespace Guppylab\Push;
 
 use Illuminate\Support\ServiceProvider;
 

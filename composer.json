@@ -1,5 +1,5 @@
 {
-    "name": "keepcloud/plugin-push",
+    "name": "guppylab/plugin-push",
     "description": "Push notifications for NativePHP Mobile: APNs direct (.p8, no Firebase) on iOS and Firebase Cloud Messaging on Android",
     "type": "nativephp-plugin",
     "license": "MIT",
@@ -16,13 +16,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Keepcloud\\Push\\": "src/"
+            "Guppylab\\Push\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Keepcloud\\Push\\PushNotificationServiceProvider"
+                "Guppylab\\Push\\PushNotificationServiceProvider"
             ]
         },
         "nativephp": {

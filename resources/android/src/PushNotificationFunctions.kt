@@ -1,4 +1,4 @@
-package com.keepcloud.plugins.push
+package com.guppylab.plugins.push
 
 import android.Manifest
 import android.content.Context
