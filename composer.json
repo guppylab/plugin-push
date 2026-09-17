@@ -1,0 +1,45 @@
+{
+    "name": "keepcloud/plugin-push",
+    "description": "Push notifications for NativePHP Mobile: APNs direct (.p8, no Firebase) on iOS and Firebase Cloud Messaging on Android",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "keywords": ["nativephp", "mobile", "push", "apns", "fcm", "notifications", "remote"],
+    "authors": [
+        {
+            "name": "Keepcloud",
+            "email": "dev@keepcloud.com.br"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "nativephp/mobile": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Keepcloud\\Push\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Keepcloud\\Push\\PushNotificationServiceProvider"
+            ]
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

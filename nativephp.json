@@ -1,0 +1,92 @@
+{
+    "name": "keepcloud/plugin-push",
+    "version": "1.0.0",
+    "description": "Push notifications via APNs direto (.p8) no iOS e Firebase Cloud Messaging no Android — handlers nativos para a facade PushNotifications do NativePHP Mobile",
+    "namespace": "PushNotification",
+    "keywords": ["push", "apns", "fcm", "notifications", "remote"],
+    "category": "notifications",
+    "license": "MIT",
+    "pricing": {
+        "type": "free"
+    },
+    "author": {
+        "name": "Keepcloud",
+        "email": "dev@keepcloud.com.br",
+        "url": "https://github.com/guppylab"
+    },
+    "homepage": "https://github.com/guppylab/plugin-push",
+    "repository": "https://github.com/guppylab/plugin-push",
+    "funding": [],
+    "platforms": [
+        "ios",
+        "android"
+    ],
+    "screenshots": [],
+    "bridge_functions": [
+        {
+            "name": "PushNotification.RequestPermission",
+            "ios": "PushNotificationFunctions.RequestPermission",
+            "android": "com.keepcloud.plugins.push.PushNotificationFunctions.RequestPermission",
+            "description": "Pede permissão de notificação e enrola o device (APNs no iOS, FCM no Android); o token chega no evento TokenGenerated"
+        },
+        {
+            "name": "PushNotification.CheckPermission",
+            "ios": "PushNotificationFunctions.CheckPermission",
+            "android": "com.keepcloud.plugins.push.PushNotificationFunctions.CheckPermission",
+            "description": "Retorna o estado atual da permissão de notificação"
+        },
+        {
+            "name": "PushNotification.GetToken",
+            "ios": "PushNotificationFunctions.GetToken",
+            "android": "com.keepcloud.plugins.push.PushNotificationFunctions.GetToken",
+            "description": "Retorna o último device token recebido (APNs hex no iOS, FCM no Android), ou null"
+        }
+    ],
+    "android": {
+        "min_version": 21,
+        "permissions": [
+            "android.permission.POST_NOTIFICATIONS"
+        ],
+        "repositories": [],
+        "dependencies": {
+            "implementation": [
+                "com.google.firebase:firebase-messaging:24.1.0",
+                "com.google.firebase:firebase-analytics:22.2.0"
+            ]
+        },
+        "activities": [],
+        "services": [
+            {
+                "name": "com.keepcloud.plugins.push.PushMessagingService",
+                "exported": false,
+                "intent_filters": [
+                    {
+                        "action": "com.google.firebase.MESSAGING_EVENT"
+                    }
+                ]
+            }
+        ],
+        "receivers": [],
+        "providers": []
+    },
+    "ios": {
+        "min_version": "15.0",
+        "permissions": [],
+        "repositories": [],
+        "dependencies": {
+            "swift_packages": [],
+            "pods": []
+        },
+        "entitlements": {
+            "aps-environment": "production"
+        }
+    },
+    "assets": {
+        "android": [],
+        "ios": []
+    },
+    "secrets": [],
+    "events": [],
+    "service_provider": "Keepcloud\\Push\\PushNotificationServiceProvider",
+    "hooks": {}
+}
