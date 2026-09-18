@@ -1,66 +1,157 @@
 package com.guppylab.plugins.push
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.os.Build
+import android.graphics.Color
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.json.JSONObject
 
 /**
- * Recebe pushes do FCM. onNewToken mantém o último token; onMessageReceived
- * monta a notificação local quando o app está em foreground (em background o
- * FCM já exibe a notification do payload). Canal "default".
+ * Receives pushes from FCM.
+ *
+ * Called for every data message, and for notification messages only while the
+ * app is in the foreground — in the background FCM renders those itself from the
+ * payload. Either way the payload is handed to PHP, which is what lets an app
+ * react to a push rather than merely be told one arrived.
  */
 class PushMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
-        // Token rotacionado pelo FCM — guarda para o GetToken servir o valor novo.
-        PushNotificationFunctions.lastToken = token
+        // FCM rotates tokens on its own schedule, usually while the app is not
+        // in the foreground. Persisting it is not enough: unless the new token
+        // reaches the backend, pushes stop arriving and nothing reports why. So
+        // the event is queued and delivered on the next resume.
+        PushStore.saveToken(applicationContext, token)
+
+        val payload = JSONObject().apply { put("token", token) }
+
+        PushNotificationFunctions.dispatch(
+            applicationContext,
+            PushStore.DEFAULT_TOKEN_EVENT,
+            payload.toString(),
+        )
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val notification = message.notification ?: return
-        // Sem título no payload, usa o nome do próprio app — o plugin é genérico
-        // e não pode fixar o nome de um app específico aqui.
-        val title = notification.title
-            ?: packageManager.getApplicationLabel(applicationInfo).toString()
-        val body = notification.body ?: ""
+        val notification = message.notification
+        val data = message.data
 
-        val channelId = "default"
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val title = notification?.title ?: data["title"]
+        val body = notification?.body ?: data["body"]
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && manager.getNotificationChannel(channelId) == null) {
-            manager.createNotificationChannel(
-                NotificationChannel(channelId, "Notificações", NotificationManager.IMPORTANCE_DEFAULT),
-            )
+        val payload = JSONObject().apply {
+            data.forEach { (key, value) -> put(key, value) }
         }
 
-        // Toca a Activity principal ao abrir a notificação. getLaunchIntentForPackage
-        // pode retornar null (sem launcher resolvível) — fallback pra Intent vazio
-        // evita NPE no PendingIntent.
+        // Tell PHP first: a data-only push may carry nothing to display, and the
+        // app still needs to know it arrived.
+        val event = JSONObject().apply {
+            put("payload", payload.toString())
+            if (title != null) put("title", title)
+            if (body != null) put("body", body)
+        }
+
+        PushNotificationFunctions.dispatch(
+            applicationContext,
+            PushStore.messageEvent(applicationContext),
+            event.toString(),
+        )
+
+        if (title == null && body == null) {
+            return
+        }
+
+        show(message, title, body, payload)
+    }
+
+    private fun show(message: RemoteMessage, title: String?, body: String?, payload: JSONObject) {
+        PushNotificationFunctions.ensureChannel(applicationContext)
+
+        val channelId = PushStore.channelId(applicationContext)
+        val link = deepLink(payload)
+
+        // Reopen the app and carry the payload along, so a tap on a cold start
+        // still produces a NotificationTapped event with its data intact.
         val launch = (packageManager.getLaunchIntentForPackage(packageName) ?: Intent()).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(PushStore.EXTRA_PAYLOAD, payload.toString())
+            if (link != null) putExtra(PushStore.EXTRA_LINK, link)
         }
+
         val pending = PendingIntent.getActivity(
-            this, 0, launch,
+            this,
+            message.messageId?.hashCode() ?: 0,
+            launch,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val builder = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSmallIcon(applicationInfo.icon)
+            // No title in the payload: fall back to the host app's own name. The
+            // plugin is generic and cannot hard-code one.
+            .setContentTitle(title ?: packageManager.getApplicationLabel(applicationInfo).toString())
+            .setContentText(body ?: "")
+            .setSmallIcon(smallIcon())
             .setAutoCancel(true)
             .setContentIntent(pending)
 
-        notification.notificationCount?.let { count ->
+        body?.let { builder.setStyle(NotificationCompat.BigTextStyle().bigText(it)) }
+
+        accentColor()?.let {
+            builder.color = it
+            builder.setColorized(false)
+        }
+
+        message.notification?.notificationCount?.let { count ->
             if (count > 0) builder.setNumber(count)
         }
 
-        manager.notify(message.messageId?.hashCode() ?: System.currentTimeMillis().toInt(), builder.build())
+        NotificationManagerCompat.from(this).notify(
+            message.messageId?.hashCode() ?: System.currentTimeMillis().toInt(),
+            builder.build(),
+        )
+    }
+
+    /**
+     * Status bar icons are drawn as a silhouette, so a full-colour launcher icon
+     * shows up as a white blob. Apps are expected to ship a white,
+     * transparent-background drawable and name it in config/push.php; the
+     * launcher icon is only the fallback.
+     */
+    private fun smallIcon(): Int {
+        val name = PushStore.smallIconName(applicationContext)
+
+        if (!name.isNullOrEmpty()) {
+            val id = resources.getIdentifier(name, "drawable", packageName)
+            if (id != 0) {
+                return id
+            }
+
+            val mipmap = resources.getIdentifier(name, "mipmap", packageName)
+            if (mipmap != 0) {
+                return mipmap
+            }
+        }
+
+        return applicationInfo.icon
+    }
+
+    private fun accentColor(): Int? {
+        val color = PushStore.accentColor(applicationContext) ?: return null
+
+        return runCatching { Color.parseColor(color) }.getOrNull()
+    }
+
+    private fun deepLink(payload: JSONObject): String? {
+        val nested = payload.optJSONObject("data")
+
+        for (key in PushStore.deepLinkKeys(applicationContext)) {
+            payload.optString(key).takeIf { it.isNotEmpty() }?.let { return it }
+            nested?.optString(key)?.takeIf { it.isNotEmpty() }?.let { return it }
+        }
+
+        return null
     }
 }
