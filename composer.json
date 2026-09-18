@@ -1,9 +1,17 @@
 {
     "name": "guppylab/plugin-push",
-    "description": "Push notifications for NativePHP Mobile: APNs direct (.p8, no Firebase) on iOS and Firebase Cloud Messaging on Android",
+    "description": "Push notifications for NativePHP Mobile: direct APNs (.p8, no Firebase) on iOS and Firebase Cloud Messaging on Android, with payload delivery, notification taps, unenrolment and the badge",
     "type": "nativephp-plugin",
     "license": "MIT",
-    "keywords": ["nativephp", "mobile", "push", "apns", "fcm", "notifications", "remote"],
+    "keywords": [
+        "nativephp",
+        "mobile",
+        "push",
+        "apns",
+        "fcm",
+        "notifications",
+        "remote"
+    ],
     "authors": [
         {
             "name": "Guppylab",
@@ -11,7 +19,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "nativephp/mobile": "^3.0"
     },
     "autoload": {
@@ -30,10 +38,13 @@
         }
     },
     "require-dev": {
-        "pestphp/pest": "^3.0"
+        "pestphp/pest": "^3.0",
+        "laravel/pint": "^1.32"
     },
     "scripts": {
-        "test": "pest"
+        "test": "pest",
+        "lint": "pint",
+        "lint:test": "pint --test"
     },
     "config": {
         "allow-plugins": {
